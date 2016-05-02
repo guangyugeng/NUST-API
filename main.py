@@ -23,6 +23,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r'/u/info', jwc.handlers.StudentInfoHandler),
             (r'/u/score', jwc.handlers.ScoreHandlers),
+            (r'/u/classtable', jwc.handlers.classtableHandlers),
         ]
         try:
             config.read('app.conf')
