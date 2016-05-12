@@ -26,7 +26,7 @@ def login_session(username, password):
         return http
 
 
-def parser_table(soup, table):
+def parser_relationtable(soup, table):
     res = {}
     for row in table.contents[3::2]:
         ro = []
@@ -64,7 +64,7 @@ def parser_classtable(soup, classtable):
                     if count in [1,4,7]:
                         u = string
                     if count in [2,5,8]:
-                        class_list.append((u, string))
+                        class_list.append([u, string])
             for th0 in th:
                 for th1 in th0.stripped_strings:
 
@@ -150,6 +150,26 @@ class ScoreHandlers_gc0(tornado.web.RequestHandler):
         self.render('index.html')
         """
 
+def combine_table(relationtable, classtable):
+    for week in classtable.items():
+        for lesson in week[1]:
+            for items in lesson[1]:
+                for pairs in relationtable.items():
+                    message_list = pairs[1][0]
+                    if items[0] == message_list[1]:
+                        items.append(message_list[2])
+                        items.append(message_list[5])
+                        """
+                        print message_list[5]
+                        m = re.search(u'^.*,', message_list[5])
+                        m = re.search(u'^.*,',u'test,dssdsd')
+                        #m = re.search(u'(?<=-)\w+', u'spam-egg')
+                        print m.group(0)
+                        print type(message_list[5])
+                        """
+                        items.append(message_list[6])
+    return classtable
+
 class classtableHandlers(tornado.web.RequestHandler):
     def get(self):
         user, pwd = map(self.get_argument, ['user', 'pwd'])
@@ -157,10 +177,13 @@ class classtableHandlers(tornado.web.RequestHandler):
         classtable_page = http.get(jwc_domain + '/njlgdx/xskb/xskb_list.do?Ves632DSdyV=NEW_XSD_PYGL')
         soup = BeautifulSoup(classtable_page.text)
 
-        table = soup.find(id='dataList')
-        res0 = parser_table(soup, table)
-        self.write(json.dumps(res0))        
+        relationtable = soup.find(id='dataList')
+        res0 = parser_relationtable(soup, relationtable)
+        #self.write(json.dumps(res0))        
 
         classtable = soup.find(id='kbtable')
         res1 = parser_classtable(soup, classtable)
-        self.write(json.dumps(res1))
+       # self.write(json.dumps(res1))
+
+        result = combine_table(res0, res1)
+        self.write(json.dumps(result))
